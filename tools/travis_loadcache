@@ -1,0 +1,39 @@
+#!/bin/bash -e
+
+# do not expose secrets!
+set +x
+
+if [ -z "$ARCHIVE_LINK" ]; then
+  echo "ARCHIVE_LINK must be set".
+  exit 1
+fi
+if [ -z "$ARCHIVE_IV" ]; then
+  echo "ARCHIVE_IV must be set".
+  exit 1
+fi
+if [ -z "$ARCHIVE_PW" ]; then
+  echo "ARCHIVE_PW must be set".
+  exit 1
+fi
+
+# fetch the archive
+url=$(echo $ARCHIVE_LINK | sed 's/open?/uc?export=download\&/')
+cookie=$(mktemp -t cookie.XXXXXXXXXX)
+wget --save-cookie $cookie "$url" -O /dev/null
+confirmcode=$(grep 'download_warning' $cookie | cut -f 7)
+url2=$(echo $url | sed "s/&id=/\&confirm=$confirmcode\&id=/")
+secure=$(mktemp -t secure.XXXXXXXXXX)
+wget --load-cookie $cookie "$url2" -O $secure
+rm $cookie
+
+# decrypt
+archive=$(mktemp -t archive.XXXXXXXXXX)
+openssl aes-256-cbc -d -pass pass:$ARCHIVE_PW -md sha512 -iv $ARCHIVE_IV -in $secure -out $archive
+rm -f $secure
+
+# uncompress the archive
+tar -xJPf $archive
+rm -f $archive
+
+echo Cache loaded.
+

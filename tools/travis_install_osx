@@ -48,8 +48,12 @@ if [ -d "${QTDIR}/bin" ]; then
   fi
 else
   rm -fr ${CACHEDIR}
-  mkdir -p ${CACHEDIR}
-  QT_CI_DOWNLOADER="wget -nv -c" PATH=${TRAVIS_BUILD_DIR}/tools/qtci:${PATH} install-qt-online "qt.qt5.${QT_VERSION_SHORT}.clang_64,qt.qt5.${QT_VERSION_SHORT}.qtwebengine" "${CACHEDIR}" 3.1.1
+  if true; then
+    "$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"/travis_loadcache
+  else
+    mkdir -p ${CACHEDIR}
+    QT_CI_DOWNLOADER="wget -nv -c" PATH=${TRAVIS_BUILD_DIR}/tools/qtci:${PATH} install-qt-online "qt.qt5.${QT_VERSION_SHORT}.clang_64,qt.qt5.${QT_VERSION_SHORT}.qtwebengine" "${CACHEDIR}" 3.1.1
+  fi
   echo "export PATH=${QTDIR}/bin:$PATH" > ${CACHEDIR}/qt-${QT_VERSION}.env
   validate
 fi
