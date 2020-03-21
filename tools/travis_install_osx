@@ -48,12 +48,17 @@ if [ -d "${QTDIR}/bin" ]; then
   fi
 else
   rm -fr ${CACHEDIR}
-  if true; then
-    "$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"/travis_loadcache
-  else
+  if [ -z "$ARCHIVE_LINK" ]; then # install using Qt offline installer.
     mkdir -p ${CACHEDIR}
-    QT_CI_DOWNLOADER="wget -nv -c" PATH=${TRAVIS_BUILD_DIR}/tools/qtci:${PATH} install-qt-online "qt.qt5.${QT_VERSION_SHORT}.clang_64,qt.qt5.${QT_VERSION_SHORT}.qtwebengine" "${CACHEDIR}" 3.1.1
+    pushd ${CACHEDIR}
+    # install-qt creates the install at $PWD/Qt.
+    QT_CI_PACKAGES=qt.qt5.${QT_VERSION_SHORT}.clang_64,qt.qt5.${QT_VERSION_SHORT}.qtwebengine QT_CI_DOWNLOADER="wget -nv -c" PATH=${TRAVIS_BUILD_DIR}/tools/qtci:${PATH} install-qt ${QT_VERSION}
+    popd
+    validate
+    rm ${CACHEDIR}/qt-opensource*.dmg
+  else # load cache archive
+    "$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"/travis_loadcache
+    echo "export PATH=${QTDIR}/bin:$PATH" > ${CACHEDIR}/qt-${QT_VERSION}.env
+    validate
   fi
-  echo "export PATH=${QTDIR}/bin:$PATH" > ${CACHEDIR}/qt-${QT_VERSION}.env
-  validate
 fi
