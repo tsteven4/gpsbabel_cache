@@ -19,11 +19,11 @@ fi
 # fetch the archive
 url=$(echo $ARCHIVE_LINK | sed 's/open?/uc?export=download\&/')
 cookie=$(mktemp -t cookie.XXXXXXXXXX)
-wget --save-cookie $cookie "$url" -O /dev/null
+wget -nv --save-cookie $cookie "$url" -O /dev/null
 confirmcode=$(grep 'download_warning' $cookie | cut -f 7)
 url2=$(echo $url | sed "s/&id=/\&confirm=$confirmcode\&id=/")
 secure=$(mktemp -t secure.XXXXXXXXXX)
-wget --load-cookie $cookie "$url2" -O $secure
+wget -nv --load-cookie $cookie "$url2" -O $secure
 rm $cookie
 
 # decrypt
