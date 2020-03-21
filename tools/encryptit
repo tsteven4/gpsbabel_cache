@@ -1,0 +1,5 @@
+#!/bin/bash
+file=$1
+iv=$(openssl rand -hex 4)
+openssl aes-256-cbc -e -md sha512 -iv $iv -in $file -out $file.$iv
+

@@ -1,0 +1,58 @@
+#!/bin/bash -ex
+
+#git clone git://code.qt.io/qt/qt5.git
+#cd qt5
+#git checkout 5.12.7
+#perl init-repository --module-subset=essential,addon
+#cd ..
+
+version=5.12.7
+
+# exclude modules without some kind of LGPL license.
+# virtualkeyboard is pretty sticky, it gets deployed if it exists and you use Gui.
+excludes=( \
+qtdatavis3d \
+qtwebglplugin \
+qtvirtualkeyboard \
+qtcharts \
+qtnetworkauth \
+)
+
+# also some modules we don't use
+excludes+=( \
+qtpurchasing \
+qtscript \
+)
+
+tar -xJf qt-everywhere-src-${version}.tar.xz
+cd qt-everywhere-src-${version}
+for component in ${excludes[@]}
+do
+  /bin/rm -fr $component
+done
+cd ..
+
+mkdir qt5-build
+cd qt5-build
+../qt-everywhere-src-${version}/configure --prefix=/Users/travis/Cache/Qt/${version}/clang_64 -opensource -confirm-license -nomake examples -nomake tests -release
+make -j4
+make install
+
+cd ..
+licenses=( \
+qt-everywhere-src-${version}/LICENSE.FDL  \
+qt-everywhere-src-${version}/LICENSE.GPLv2 \
+qt-everywhere-src-${version}/LICENSE.GPLv3 \
+qt-everywhere-src-${version}/LICENSE.LGPLv21 \
+qt-everywhere-src-${version}/LICENSE.LGPLv3 \
+qt-everywhere-src-${version}/LICENSE.QT-LICENSE-AGREEMENT \
+)
+
+mkdir /Users/travis/Cache/Qt/Licenses
+for license in ${licenses[@]}
+do
+  cp ${license} /Users/travis/Cache/Qt/Licenses
+done
+
+tar -cJPf qt-${version}_macos.tar.xz /Users/travis/Cache
+
